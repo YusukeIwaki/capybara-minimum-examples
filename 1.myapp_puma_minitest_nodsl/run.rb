@@ -45,7 +45,7 @@ class MyAppTest < Minitest::Test
 
     url = "#{@base_url}/"
     response = Net::HTTP.get_response(URI(url))
-    assert_operator Net::HTTPSuccess, :===, response
+    assert_kind_of Net::HTTPSuccess, response
     assert_match /It works!/, response.body
   end
 end
