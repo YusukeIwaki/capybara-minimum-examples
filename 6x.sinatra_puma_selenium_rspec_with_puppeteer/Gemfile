@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem 'capybara'
+gem 'puma'
+gem 'puppeteer-ruby'
+gem 'rspec'
+gem 'selenium-webdriver'
+gem 'sinatra'
+
+gem 'pry-byebug'
