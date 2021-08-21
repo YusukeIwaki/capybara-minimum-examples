@@ -1,17 +1,13 @@
 require 'capybara'
 
 # Rackアプリケーションの登録
-Capybara.app = Proc.new do |env|
-  status = 200
-  headers = {
-    'Content-Type' => 'text/html',
-  }
-  body = Enumerator.new do |buf|
-    buf << '<h1>It works!</h1>'
-  end
+require 'sinatra/base'
 
-  [status, headers, body]
+class MyApp < Sinatra::Base
+  get('/') { '<h1>It works!</h1>' }
 end
+
+Capybara.app = MyApp
 
 # https://github.com/teamcapybara/capybara/blob/master/lib/capybara/rails.rb
 # と同じ内容でrack_testドライバを登録
@@ -24,7 +20,8 @@ Capybara.current_driver = :rack_test
 require 'minitest/autorun'
 require 'minitest/unit'
 
-class MyAppTest < Minitest::Test
+# DSLなし版 ----------
+class MyAppTestWithoutDSL < Minitest::Test
   def setup
     # ここで（初めて Capybara.current_session.driver を参照するタイミングで）
     # RackTestドライバのテストセッションが開始される。
@@ -40,3 +37,25 @@ class MyAppTest < Minitest::Test
     assert_match /It works!/, @driver.html
   end
 end
+# DSLなし版ここまで ----------
+
+# DSLあり版 ----------
+# ちょうど下のページに書いてある例
+# https://github.com/teamcapybara/capybara#using-capybara-with-minitest
+require 'capybara/dsl'
+require 'capybara/minitest'
+
+class MyAppTestWithDSL < Minitest::Test
+  include Capybara::DSL
+  include Capybara::Minitest::Assertions # <-- これが内部的にCapybara::DSLに依存している
+
+  def teardown
+    Capybara.reset_sessions!
+  end
+
+  def test_it_works
+    visit('/')
+    assert_text(/It works!/)
+  end
+end
+# DSLあり版ここまで ----------
