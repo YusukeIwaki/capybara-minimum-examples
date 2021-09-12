@@ -5,6 +5,7 @@ source "https://rubygems.org"
 gem 'puma'
 gem 'puppeteer-ruby'
 gem 'rspec'
+gem 'rack-test_server'
 gem 'sinatra'
 
 gem 'pry-byebug'

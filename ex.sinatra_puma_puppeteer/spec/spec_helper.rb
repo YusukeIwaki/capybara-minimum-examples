@@ -102,36 +102,23 @@ RSpec.configure do |config|
   config.before(:suite) do
     # Rackアプリケーションの起動
     require_relative '../myapp'
+    require 'rack/test_server'
 
-    require 'rack/builder'
-    testapp = Rack::Builder.app(MyApp.new) do
-      map '/__ping' do
-        run ->(env) { [200, { 'Content-Type' => 'text/plain' }, ['OK']] }
-      end
-    end
+    server = Rack::TestServer.new(
+      # options for Rack::Server
+      # @see https://github.com/rack/rack/blob/2.2.3/lib/rack/server.rb#L173
+      app: MyApp.new,
+      server: :puma,
+      Port: 3000,
+      daemonize: false,
+      # options for Rack::Handler::Puma
+      # @see https://github.com/puma/puma/blob/v5.4.0/lib/rack/handler/puma.rb#L84
+      Threads: '0:4',
+      workers: 0,
+    )
 
-    require 'rack/handler/puma'
-    server_thread = Thread.new do
-      Rack::Handler::Puma.run(testapp,
-        Port: 3000,
-        Threads: '0:4',
-        workers: 0,
-        daemon: false,
-      )
-    end
-
-    require 'net/http'
-    require 'timeout'
-    Timeout.timeout(3) do
-      loop do
-        Net::HTTP.get(URI("http://127.0.0.1:3000/__ping"))
-        break
-      rescue Errno::EADDRNOTAVAIL
-        sleep 1
-      rescue Errno::ECONNREFUSED
-        sleep 0.1
-      end
-    end
+    server.start_async
+    server.wait_for_ready
   end
 
   config.around(:each, type: :integration) do |example|
